@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/in-rich/lib-go/deploy"
 	teams_pb "github.com/in-rich/proto/proto-go/teams"
 	"github.com/in-rich/uservice-teams/config"
@@ -13,9 +12,14 @@ import (
 )
 
 func main() {
-	db, closeDB := deploy.OpenDB(config.App.Postgres.DSN)
+	log.Println("Starting server")
+	db, closeDB, err := deploy.OpenDB(config.App.Postgres.DSN)
+	if err != nil {
+		log.Fatalf("failed to connect to database: %v", err)
+	}
 	defer closeDB()
 
+	log.Println("Running migrations")
 	if err := migrations.Migrate(db); err != nil {
 		log.Fatalf("failed to migrate: %v", err)
 	}
@@ -54,8 +58,10 @@ func main() {
 	updateTeamHandler := handlers.NewUpdateTeamHandler(updateTeamService)
 	updateTeamMemberHandler := handlers.NewUpdateTeamMemberHandler(updateTeamMemberService)
 
-	listener, server := deploy.StartGRPCServer(fmt.Sprintf(":%d", config.App.Server.Port), "teams")
+	log.Println("Starting to listen on port", config.App.Server.Port)
+	listener, server, health := deploy.StartGRPCServer(config.App.Server.Port)
 	defer deploy.CloseGRPCServer(listener, server)
+	go health()
 
 	teams_pb.RegisterCreateTeamServer(server, createTeamHandler)
 	teams_pb.RegisterCreateTeamMemberServer(server, createTeamMemberHandler)
@@ -68,6 +74,7 @@ func main() {
 	teams_pb.RegisterUpdateTeamServer(server, updateTeamHandler)
 	teams_pb.RegisterUpdateTeamMemberServer(server, updateTeamMemberHandler)
 
+	log.Println("Server started")
 	if err := server.Serve(listener); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
