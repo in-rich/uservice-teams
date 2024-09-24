@@ -24,6 +24,24 @@ func main() {
 		log.Fatalf("failed to migrate: %v", err)
 	}
 
+	depCheck := func() map[string]bool {
+		errDB := db.Ping()
+
+		return map[string]bool{
+			"CreateTeam":        errDB == nil,
+			"CreateTeamMember":  errDB == nil,
+			"DeleteTeam":        errDB == nil,
+			"DeleteTeamMember":  errDB == nil,
+			"ListTeamMembers":   errDB == nil,
+			"GetUserRoleInTeam": errDB == nil,
+			"ListUserTeams":     errDB == nil,
+			"SetTeamOwner":      errDB == nil,
+			"UpdateTeam":        errDB == nil,
+			"UpdateTeamMember":  errDB == nil,
+			"":                  errDB == nil,
+		}
+	}
+
 	createTeamDAO := dao.NewCreateTeamRepository(db)
 	createTeamMemberDAO := dao.NewCreateTeamMemberRepository(db)
 	deleteTeamDAO := dao.NewDeleteTeamRepository(db)
@@ -59,7 +77,7 @@ func main() {
 	updateTeamMemberHandler := handlers.NewUpdateTeamMemberHandler(updateTeamMemberService)
 
 	log.Println("Starting to listen on port", config.App.Server.Port)
-	listener, server, health := deploy.StartGRPCServer(config.App.Server.Port)
+	listener, server, health := deploy.StartGRPCServer(config.App.Server.Port, depCheck)
 	defer deploy.CloseGRPCServer(listener, server)
 	go health()
 
