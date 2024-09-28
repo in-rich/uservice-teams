@@ -24,22 +24,24 @@ func main() {
 		log.Fatalf("failed to migrate: %v", err)
 	}
 
-	depCheck := func() map[string]bool {
-		errDB := db.Ping()
-
-		return map[string]bool{
-			"CreateTeam":        errDB == nil,
-			"CreateTeamMember":  errDB == nil,
-			"DeleteTeam":        errDB == nil,
-			"DeleteTeamMember":  errDB == nil,
-			"ListTeamMembers":   errDB == nil,
-			"GetUserRoleInTeam": errDB == nil,
-			"ListUserTeams":     errDB == nil,
-			"SetTeamOwner":      errDB == nil,
-			"UpdateTeam":        errDB == nil,
-			"UpdateTeamMember":  errDB == nil,
-			"":                  errDB == nil,
-		}
+	depCheck := deploy.DepsCheck{
+		Dependencies: func() map[string]error {
+			return map[string]error{
+				"Postgres": db.Ping(),
+			}
+		},
+		Services: deploy.DepCheckServices{
+			"CreateTeam":        {"Postgres"},
+			"CreateTeamMember":  {"Postgres"},
+			"DeleteTeam":        {"Postgres"},
+			"DeleteTeamMember":  {"Postgres"},
+			"ListTeamMembers":   {"Postgres"},
+			"GetUserRoleInTeam": {"Postgres"},
+			"ListUserTeams":     {"Postgres"},
+			"SetTeamOwner":      {"Postgres"},
+			"UpdateTeam":        {"Postgres"},
+			"UpdateTeamMember":  {"Postgres"},
+		},
 	}
 
 	createTeamDAO := dao.NewCreateTeamRepository(db)
