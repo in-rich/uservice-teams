@@ -3,6 +3,7 @@ package handlers_test
 import (
 	"context"
 	"errors"
+	"github.com/in-rich/lib-go/monitor"
 	teams_pb "github.com/in-rich/proto/proto-go/teams"
 	"github.com/in-rich/uservice-teams/pkg/handlers"
 	"github.com/in-rich/uservice-teams/pkg/models"
@@ -73,7 +74,7 @@ func TestCreateTeam(t *testing.T) {
 				}).
 				Return(tt.serviceResponse, tt.serviceErr)
 
-			handler := handlers.NewCreateTeamHandler(service)
+			handler := handlers.NewCreateTeamHandler(service, monitor.NewDummyGRPCLogger())
 
 			team, err := handler.CreateTeam(context.TODO(), tt.in)
 

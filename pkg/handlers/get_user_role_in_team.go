@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"errors"
+	"github.com/in-rich/lib-go/monitor"
 	teams_pb "github.com/in-rich/proto/proto-go/teams"
 	"github.com/in-rich/uservice-teams/pkg/dao"
 	"github.com/in-rich/uservice-teams/pkg/models"
@@ -14,9 +15,10 @@ import (
 type GetUserRoleInTeamHandler struct {
 	teams_pb.GetUserRoleInTeamServer
 	service services.GetUserRoleInTeamService
+	logger  monitor.GRPCLogger
 }
 
-func (h *GetUserRoleInTeamHandler) GetUserRoleInTeam(ctx context.Context, in *teams_pb.GetUserRoleInTeamRequest) (*teams_pb.GetUserRoleInTeamResponse, error) {
+func (h *GetUserRoleInTeamHandler) getUserRoleInTeam(ctx context.Context, in *teams_pb.GetUserRoleInTeamRequest) (*teams_pb.GetUserRoleInTeamResponse, error) {
 	role, err := h.service.Exec(ctx, &models.GetUserRoleInTeamRequest{
 		TeamID: in.GetTeamId(),
 		UserID: in.GetUserId(),
@@ -40,8 +42,15 @@ func (h *GetUserRoleInTeamHandler) GetUserRoleInTeam(ctx context.Context, in *te
 	}, nil
 }
 
-func NewGetUserRoleInTeamHandler(service services.GetUserRoleInTeamService) *GetUserRoleInTeamHandler {
+func (h *GetUserRoleInTeamHandler) GetUserRoleInTeam(ctx context.Context, in *teams_pb.GetUserRoleInTeamRequest) (*teams_pb.GetUserRoleInTeamResponse, error) {
+	res, err := h.getUserRoleInTeam(ctx, in)
+	h.logger.Report(ctx, "GetUserRoleInTeam", err)
+	return res, err
+}
+
+func NewGetUserRoleInTeamHandler(service services.GetUserRoleInTeamService, logger monitor.GRPCLogger) *GetUserRoleInTeamHandler {
 	return &GetUserRoleInTeamHandler{
 		service: service,
+		logger:  logger,
 	}
 }

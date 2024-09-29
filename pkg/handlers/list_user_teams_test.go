@@ -3,6 +3,7 @@ package handlers_test
 import (
 	"context"
 	"errors"
+	"github.com/in-rich/lib-go/monitor"
 	teams_pb "github.com/in-rich/proto/proto-go/teams"
 	"github.com/in-rich/uservice-teams/pkg/handlers"
 	"github.com/in-rich/uservice-teams/pkg/models"
@@ -84,7 +85,7 @@ func TestListUserTeams(t *testing.T) {
 			service := servicesmocks.NewMockListUserTeamsService(t)
 			service.On("Exec", context.TODO(), mock.Anything).Return(tt.serviceResp, tt.serviceErr)
 
-			handler := handlers.NewListUserTeamsHandler(service)
+			handler := handlers.NewListUserTeamsHandler(service, monitor.NewDummyGRPCLogger())
 
 			resp, err := handler.ListUserTeams(context.TODO(), tt.in)
 

@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"errors"
+	"github.com/in-rich/lib-go/monitor"
 	teams_pb "github.com/in-rich/proto/proto-go/teams"
 	"github.com/in-rich/uservice-teams/pkg/dao"
 	"github.com/in-rich/uservice-teams/pkg/models"
@@ -14,9 +15,10 @@ import (
 type SetTeamOwnerHandler struct {
 	teams_pb.SetTeamOwnerServer
 	service services.SetTeamOwnerService
+	logger  monitor.GRPCLogger
 }
 
-func (h *SetTeamOwnerHandler) SetTeamOwner(ctx context.Context, in *teams_pb.SetTeamOwnerRequest) (*teams_pb.Team, error) {
+func (h *SetTeamOwnerHandler) setTeamOwner(ctx context.Context, in *teams_pb.SetTeamOwnerRequest) (*teams_pb.Team, error) {
 	team, err := h.service.Exec(ctx, &models.SetTeamOwnerRequest{
 		TeamID: in.GetTeamId(),
 		UserID: in.GetOwnerId(),
@@ -39,8 +41,15 @@ func (h *SetTeamOwnerHandler) SetTeamOwner(ctx context.Context, in *teams_pb.Set
 	}, nil
 }
 
-func NewSetTeamOwnerHandler(service services.SetTeamOwnerService) *SetTeamOwnerHandler {
+func (h *SetTeamOwnerHandler) SetTeamOwner(ctx context.Context, in *teams_pb.SetTeamOwnerRequest) (*teams_pb.Team, error) {
+	res, err := h.setTeamOwner(ctx, in)
+	h.logger.Report(ctx, "SetTeamOwner", err)
+	return res, err
+}
+
+func NewSetTeamOwnerHandler(service services.SetTeamOwnerService, logger monitor.GRPCLogger) *SetTeamOwnerHandler {
 	return &SetTeamOwnerHandler{
 		service: service,
+		logger:  logger,
 	}
 }
