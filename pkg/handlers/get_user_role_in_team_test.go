@@ -3,6 +3,7 @@ package handlers_test
 import (
 	"context"
 	"errors"
+	"github.com/in-rich/lib-go/monitor"
 	teams_pb "github.com/in-rich/proto/proto-go/teams"
 	"github.com/in-rich/uservice-teams/pkg/dao"
 	"github.com/in-rich/uservice-teams/pkg/handlers"
@@ -80,7 +81,7 @@ func TestGetUserRoleInTeam(t *testing.T) {
 			service := servicesmocks.NewMockGetUserRoleInTeamService(t)
 			service.On("Exec", context.TODO(), mock.Anything).Return(tt.serviceResp, tt.serviceErr)
 
-			handler := handlers.NewGetUserRoleInTeamHandler(service)
+			handler := handlers.NewGetUserRoleInTeamHandler(service, monitor.NewDummyGRPCLogger())
 
 			resp, err := handler.GetUserRoleInTeam(context.TODO(), tt.in)
 

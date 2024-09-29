@@ -3,6 +3,7 @@ package handlers_test
 import (
 	"context"
 	"errors"
+	"github.com/in-rich/lib-go/monitor"
 	teams_pb "github.com/in-rich/proto/proto-go/teams"
 	"github.com/in-rich/uservice-teams/pkg/handlers"
 	"github.com/in-rich/uservice-teams/pkg/services"
@@ -57,7 +58,7 @@ func TestDeleteTeamMember(t *testing.T) {
 			service := servicesmocks.NewMockDeleteTeamMemberService(t)
 			service.On("Exec", context.TODO(), tt.in.GetTeamId(), tt.in.GetUserId()).Return(tt.serviceErr)
 
-			handler := handlers.NewDeleteTeamMemberHandler(service)
+			handler := handlers.NewDeleteTeamMemberHandler(service, monitor.NewDummyGRPCLogger())
 
 			resp, err := handler.DeleteTeamMember(context.TODO(), tt.in)
 

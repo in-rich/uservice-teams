@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"errors"
+	"github.com/in-rich/lib-go/monitor"
 	teams_pb "github.com/in-rich/proto/proto-go/teams"
 	"github.com/in-rich/uservice-teams/pkg/dao"
 	"github.com/in-rich/uservice-teams/pkg/models"
@@ -14,9 +15,10 @@ import (
 type UpdateTeamMemberHandler struct {
 	teams_pb.UpdateTeamMemberServer
 	service services.UpdateTeamMemberService
+	logger  monitor.GRPCLogger
 }
 
-func (h *UpdateTeamMemberHandler) UpdateTeamMember(ctx context.Context, in *teams_pb.UpdateTeamMemberRequest) (*teams_pb.TeamMember, error) {
+func (h *UpdateTeamMemberHandler) updateTeamMember(ctx context.Context, in *teams_pb.UpdateTeamMemberRequest) (*teams_pb.TeamMember, error) {
 	teamMember, err := h.service.Exec(ctx, &models.UpdateTeamMemberRequest{
 		TeamID: in.GetTeamId(),
 		UserID: in.GetUserId(),
@@ -40,8 +42,15 @@ func (h *UpdateTeamMemberHandler) UpdateTeamMember(ctx context.Context, in *team
 	}, nil
 }
 
-func NewUpdateTeamMemberHandler(service services.UpdateTeamMemberService) *UpdateTeamMemberHandler {
+func (h *UpdateTeamMemberHandler) UpdateTeamMember(ctx context.Context, in *teams_pb.UpdateTeamMemberRequest) (*teams_pb.TeamMember, error) {
+	res, err := h.updateTeamMember(ctx, in)
+	h.logger.Report(ctx, "UpdateTeamMember", err)
+	return res, err
+}
+
+func NewUpdateTeamMemberHandler(service services.UpdateTeamMemberService, logger monitor.GRPCLogger) *UpdateTeamMemberHandler {
 	return &UpdateTeamMemberHandler{
 		service: service,
+		logger:  logger,
 	}
 }

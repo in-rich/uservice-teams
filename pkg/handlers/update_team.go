@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"errors"
+	"github.com/in-rich/lib-go/monitor"
 	teams_pb "github.com/in-rich/proto/proto-go/teams"
 	"github.com/in-rich/uservice-teams/pkg/dao"
 	"github.com/in-rich/uservice-teams/pkg/models"
@@ -14,9 +15,10 @@ import (
 type UpdateTeamHandler struct {
 	teams_pb.UpdateTeamServer
 	service services.UpdateTeamService
+	logger  monitor.GRPCLogger
 }
 
-func (h *UpdateTeamHandler) UpdateTeam(ctx context.Context, in *teams_pb.UpdateTeamRequest) (*teams_pb.Team, error) {
+func (h *UpdateTeamHandler) updateTeam(ctx context.Context, in *teams_pb.UpdateTeamRequest) (*teams_pb.Team, error) {
 	team, err := h.service.Exec(ctx, &models.UpdateTeamRequest{
 		TeamID: in.GetTeamId(),
 		Name:   in.GetName(),
@@ -39,8 +41,15 @@ func (h *UpdateTeamHandler) UpdateTeam(ctx context.Context, in *teams_pb.UpdateT
 	}, nil
 }
 
-func NewUpdateTeamHandler(service services.UpdateTeamService) *UpdateTeamHandler {
+func (h *UpdateTeamHandler) UpdateTeam(ctx context.Context, in *teams_pb.UpdateTeamRequest) (*teams_pb.Team, error) {
+	res, err := h.updateTeam(ctx, in)
+	h.logger.Report(ctx, "UpdateTeam", err)
+	return res, err
+}
+
+func NewUpdateTeamHandler(service services.UpdateTeamService, logger monitor.GRPCLogger) *UpdateTeamHandler {
 	return &UpdateTeamHandler{
 		service: service,
+		logger:  logger,
 	}
 }

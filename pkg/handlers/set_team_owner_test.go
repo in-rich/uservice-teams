@@ -3,6 +3,7 @@ package handlers_test
 import (
 	"context"
 	"errors"
+	"github.com/in-rich/lib-go/monitor"
 	teams_pb "github.com/in-rich/proto/proto-go/teams"
 	"github.com/in-rich/uservice-teams/pkg/dao"
 	"github.com/in-rich/uservice-teams/pkg/handlers"
@@ -78,7 +79,7 @@ func TestSetTeamOwner(t *testing.T) {
 			service := servicesmocks.NewMockSetTeamOwnerService(t)
 			service.On("Exec", context.TODO(), mock.Anything).Return(tt.serviceResp, tt.serviceErr)
 
-			handler := handlers.NewSetTeamOwnerHandler(service)
+			handler := handlers.NewSetTeamOwnerHandler(service, monitor.NewDummyGRPCLogger())
 
 			resp, err := handler.SetTeamOwner(context.TODO(), tt.in)
 

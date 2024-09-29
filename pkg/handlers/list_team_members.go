@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"errors"
+	"github.com/in-rich/lib-go/monitor"
 	teams_pb "github.com/in-rich/proto/proto-go/teams"
 	"github.com/in-rich/uservice-teams/pkg/models"
 	"github.com/in-rich/uservice-teams/pkg/services"
@@ -13,9 +14,10 @@ import (
 type ListTeamMembersHandler struct {
 	teams_pb.ListTeamMembersServer
 	service services.ListTeamMembersService
+	logger  monitor.GRPCLogger
 }
 
-func (h *ListTeamMembersHandler) ListTeamMembers(ctx context.Context, in *teams_pb.ListTeamMembersRequest) (*teams_pb.ListTeamMembersResponse, error) {
+func (h *ListTeamMembersHandler) listTeamMembers(ctx context.Context, in *teams_pb.ListTeamMembersRequest) (*teams_pb.ListTeamMembersResponse, error) {
 	teamMembers, err := h.service.Exec(ctx, &models.ListTeamMembersRequest{
 		TeamID: in.GetTeamId(),
 		Limit:  int(in.GetLimit()),
@@ -43,8 +45,15 @@ func (h *ListTeamMembersHandler) ListTeamMembers(ctx context.Context, in *teams_
 	}, nil
 }
 
-func NewListTeamMembersHandler(service services.ListTeamMembersService) *ListTeamMembersHandler {
+func (h *ListTeamMembersHandler) ListTeamMembers(ctx context.Context, in *teams_pb.ListTeamMembersRequest) (*teams_pb.ListTeamMembersResponse, error) {
+	res, err := h.listTeamMembers(ctx, in)
+	h.logger.Report(ctx, "ListTeamMembers", err)
+	return res, err
+}
+
+func NewListTeamMembersHandler(service services.ListTeamMembersService, logger monitor.GRPCLogger) *ListTeamMembersHandler {
 	return &ListTeamMembersHandler{
 		service: service,
+		logger:  logger,
 	}
 }

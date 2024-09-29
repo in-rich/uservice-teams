@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"errors"
+	"github.com/in-rich/lib-go/monitor"
 	teams_pb "github.com/in-rich/proto/proto-go/teams"
 	"github.com/in-rich/uservice-teams/pkg/dao"
 	"github.com/in-rich/uservice-teams/pkg/models"
@@ -14,9 +15,10 @@ import (
 type CreateTeamMemberHandler struct {
 	teams_pb.CreateTeamMemberServer
 	service services.CreateTeamMemberService
+	logger  monitor.GRPCLogger
 }
 
-func (h *CreateTeamMemberHandler) CreateTeamMember(ctx context.Context, in *teams_pb.CreateTeamMemberRequest) (*teams_pb.TeamMember, error) {
+func (h *CreateTeamMemberHandler) createTeamMember(ctx context.Context, in *teams_pb.CreateTeamMemberRequest) (*teams_pb.TeamMember, error) {
 	teamMember, err := h.service.Exec(ctx, &models.CreateTeamMemberRequest{
 		TeamID: in.GetTeamId(),
 		UserID: in.GetUserId(),
@@ -40,8 +42,15 @@ func (h *CreateTeamMemberHandler) CreateTeamMember(ctx context.Context, in *team
 	}, nil
 }
 
-func NewCreateTeamMemberHandler(service services.CreateTeamMemberService) *CreateTeamMemberHandler {
+func (h *CreateTeamMemberHandler) CreateTeamMember(ctx context.Context, in *teams_pb.CreateTeamMemberRequest) (*teams_pb.TeamMember, error) {
+	res, err := h.createTeamMember(ctx, in)
+	h.logger.Report(ctx, "CreateTeamMember", err)
+	return res, err
+}
+
+func NewCreateTeamMemberHandler(service services.CreateTeamMemberService, logger monitor.GRPCLogger) *CreateTeamMemberHandler {
 	return &CreateTeamMemberHandler{
 		service: service,
+		logger:  logger,
 	}
 }
