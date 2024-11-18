@@ -44,16 +44,18 @@ func main() {
 			}
 		},
 		Services: deploy.DepCheckServices{
-			"CreateTeam":        {"Postgres"},
-			"CreateTeamMember":  {"Postgres"},
-			"DeleteTeam":        {"Postgres"},
-			"DeleteTeamMember":  {"Postgres"},
-			"ListTeamMembers":   {"Postgres"},
-			"GetUserRoleInTeam": {"Postgres"},
-			"ListUserTeams":     {"Postgres"},
-			"SetTeamOwner":      {"Postgres"},
-			"UpdateTeam":        {"Postgres"},
-			"UpdateTeamMember":  {"Postgres"},
+			"CreateTeam":             {"Postgres"},
+			"CreateTeamMember":       {"Postgres"},
+			"DeleteTeam":             {"Postgres"},
+			"DeleteTeamMember":       {"Postgres"},
+			"ListTeamMembers":        {"Postgres"},
+			"GetUserRoleInTeam":      {"Postgres"},
+			"ListUserTeams":          {"Postgres"},
+			"SetTeamOwner":           {"Postgres"},
+			"UpdateTeam":             {"Postgres"},
+			"UpdateTeamMember":       {"Postgres"},
+			"CreateInvitationCode":   {"Postgres"},
+			"JoinTeamWithInvitation": {"Postgres"},
 		},
 	}
 
@@ -68,6 +70,8 @@ func main() {
 	setTeamOwnerDAO := dao.NewSetTeamOwnerRepository(db)
 	updateTeamDAO := dao.NewUpdateTeamRepository(db)
 	updateTeamMemberDAO := dao.NewUpdateTeamMemberRepository(db)
+	createInvitationCodeDAO := dao.NewCreateInvitationCodeRepository(db)
+	consumeInvitationCodeDAO := dao.NewConsumeInvitationCodeRepository(db)
 
 	createTeamService := services.NewCreateTeamService(createTeamDAO)
 	createTeamMemberService := services.NewCreateTeamMemberService(createTeamMemberDAO, getTeamDAO)
@@ -79,6 +83,8 @@ func main() {
 	setTeamOwnerService := services.NewSetTeamOwnerService(setTeamOwnerDAO)
 	updateTeamService := services.NewUpdateTeamService(updateTeamDAO)
 	updateTeamMemberService := services.NewUpdateTeamMemberService(updateTeamMemberDAO)
+	createInvitationCodeService := services.NewCreateInvitationCodeService(createInvitationCodeDAO)
+	joinTeamWithInvitationService := services.NewJoinTeamWithInvitationService(consumeInvitationCodeDAO, createTeamMemberDAO)
 
 	createTeamHandler := handlers.NewCreateTeamHandler(createTeamService, logger)
 	createTeamMemberHandler := handlers.NewCreateTeamMemberHandler(createTeamMemberService, logger)
@@ -90,6 +96,8 @@ func main() {
 	setTeamOwnerHandler := handlers.NewSetTeamOwnerHandler(setTeamOwnerService, logger)
 	updateTeamHandler := handlers.NewUpdateTeamHandler(updateTeamService, logger)
 	updateTeamMemberHandler := handlers.NewUpdateTeamMemberHandler(updateTeamMemberService, logger)
+	createInvitationCodeHandler := handlers.NewCreateInvitationCodeHandler(createInvitationCodeService, logger)
+	joinTeamWithInvitationHandler := handlers.NewJoinTeamWithInvitationHandler(joinTeamWithInvitationService, logger)
 
 	logger.Info(fmt.Sprintf("Starting to listen on port %v", config.App.Server.Port))
 	listener, server, health := deploy.StartGRPCServer(logger, config.App.Server.Port, depCheck)
@@ -106,6 +114,8 @@ func main() {
 	teams_pb.RegisterSetTeamOwnerServer(server, setTeamOwnerHandler)
 	teams_pb.RegisterUpdateTeamServer(server, updateTeamHandler)
 	teams_pb.RegisterUpdateTeamMemberServer(server, updateTeamMemberHandler)
+	teams_pb.RegisterCreateInvitationCodeServer(server, createInvitationCodeHandler)
+	teams_pb.RegisterJoinTeamWIthInvitationServer(server, joinTeamWithInvitationHandler)
 
 	logger.Info("Server started")
 	if err := server.Serve(listener); err != nil {
