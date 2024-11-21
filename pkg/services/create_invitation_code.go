@@ -17,7 +17,7 @@ const InvitationCodeLength = 6
 
 const InvitationCodeTryCount = 3
 
-var InvitationCodeChars = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+var InvitationCodeChars = []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
 var InvitationCodeCharsLength = big.NewInt(int64(len(InvitationCodeChars)))
 
