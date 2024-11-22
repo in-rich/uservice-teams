@@ -48,6 +48,7 @@ func main() {
 			"CreateTeamMember":       {"Postgres"},
 			"DeleteTeam":             {"Postgres"},
 			"DeleteTeamMember":       {"Postgres"},
+			"GetTeam":                {"Postgres"},
 			"ListTeamMembers":        {"Postgres"},
 			"GetUserRoleInTeam":      {"Postgres"},
 			"ListUserTeams":          {"Postgres"},
@@ -77,6 +78,7 @@ func main() {
 	createTeamMemberService := services.NewCreateTeamMemberService(createTeamMemberDAO, getTeamDAO)
 	deleteTeamService := services.NewDeleteTeamService(deleteTeamDAO)
 	deleteTeamMemberService := services.NewDeleteTeamMemberService(deleteTeamMemberDAO)
+	getTeamService := services.NewGetTeamService(getTeamDAO)
 	listTeamMembersService := services.NewListTeamMembersService(listTeamMembersDAO)
 	getUserRoleInTeamService := services.NewGetUserRoleInTeamService(getUserRoleInTeamDAO)
 	listUserTeamsService := services.NewListUserTeamsService(listUserTeamsDAO)
@@ -90,6 +92,7 @@ func main() {
 	createTeamMemberHandler := handlers.NewCreateTeamMemberHandler(createTeamMemberService, logger)
 	deleteTeamHandler := handlers.NewDeleteTeamHandler(deleteTeamService, logger)
 	deleteTeamMemberHandler := handlers.NewDeleteTeamMemberHandler(deleteTeamMemberService, logger)
+	getTeamHandler := handlers.NewGetTeamHandler(getTeamService, logger)
 	listTeamMembersHandler := handlers.NewListTeamMembersHandler(listTeamMembersService, logger)
 	getUserRoleInTeamHandler := handlers.NewGetUserRoleInTeamHandler(getUserRoleInTeamService, logger)
 	listUserTeamsHandler := handlers.NewListUserTeamsHandler(listUserTeamsService, logger)
@@ -108,6 +111,7 @@ func main() {
 	teams_pb.RegisterCreateTeamMemberServer(server, createTeamMemberHandler)
 	teams_pb.RegisterDeleteTeamServer(server, deleteTeamHandler)
 	teams_pb.RegisterDeleteTeamMemberServer(server, deleteTeamMemberHandler)
+	teams_pb.RegisterGetTeamServer(server, getTeamHandler)
 	teams_pb.RegisterListTeamMembersServer(server, listTeamMembersHandler)
 	teams_pb.RegisterGetUserRoleInTeamServer(server, getUserRoleInTeamHandler)
 	teams_pb.RegisterListUserTeamsServer(server, listUserTeamsHandler)
